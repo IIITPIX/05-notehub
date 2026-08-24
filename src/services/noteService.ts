@@ -2,7 +2,7 @@ import axios from "axios";
 import type { Note } from "../types/note";
 
 const apiKey = import.meta.env.VITE_NOTEHUB_TOKEN;
-axios.defaults.baseURL = "https://notehub-public.goit.study/api/notes";
+axios.defaults.baseURL = "https://notehub-public.goit.study/api";
 axios.defaults.headers.common["accept"] = "application/json";
 axios.defaults.headers.common["Authorization"] = `Bearer ${apiKey}`;
 
@@ -21,7 +21,7 @@ export async function fetchNotes({
   page,
   perPage,
 }: FetchNotesProps): Promise<FetchNotesData> {
-  const { data } = await axios.get<FetchNotesData>("/", {
+  const { data } = await axios.get<FetchNotesData>("/notes", {
     params: {
       search: search,
       page: page,
@@ -35,11 +35,8 @@ interface FetchDeleteNote {
   id: string;
 }
 
-type returnFetchDeleteNote = { id: string };
-export async function fetchDeleteNote({
-  id,
-}: FetchDeleteNote): Promise<returnFetchDeleteNote> {
-  const { data } = await axios.delete<returnFetchDeleteNote>(`/${id}`);
+export async function fetchDeleteNote({ id }: FetchDeleteNote): Promise<Note> {
+  const { data } = await axios.delete<Note>(`/notes${id}`);
   return data;
 }
 
@@ -52,8 +49,8 @@ export async function addNotes({
   title,
   content,
   tag,
-}: addNotesProps): Promise<string> {
-  const { data } = await axios.post<string>("", {
+}: addNotesProps): Promise<Note> {
+  const { data } = await axios.post<Note>("/notes", {
     title: title,
     content: content,
     tag: tag,

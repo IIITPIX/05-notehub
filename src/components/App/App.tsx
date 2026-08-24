@@ -7,16 +7,23 @@ import { useState } from "react";
 import { fetchNotes } from "../../services/noteService";
 import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
+import { useDebouncedCallback } from "use-debounce";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchText, setSearchText] = useState<string>("");
+
   const { data } = useQuery({
     queryKey: ["notes", currentPage, searchText],
     queryFn: () =>
       fetchNotes({ search: searchText, page: currentPage, perPage: 10 }),
     placeholderData: keepPreviousData,
   });
+
+  const handleSearchText = useDebouncedCallback((text: string) => {
+    setSearchText(text);
+    setCurrentPage(1);
+  }, 500);
 
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const openModal = () => {
@@ -30,7 +37,7 @@ function App() {
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox onChange={setSearchText} />
+        <SearchBox onChange={handleSearchText} />
         {data && (
           <Pagination
             currentPage={currentPage}
@@ -43,7 +50,12 @@ function App() {
         </button>
       </header>
       {data?.notes && data.notes.length > 0 && <NoteList notes={data.notes} />}
-      {isOpenModal && <Modal children={<NoteForm closeModal={closeModal} />} />}
+      {isOpenModal && (
+        <Modal
+          children={<NoteForm closeModal={closeModal} />}
+          onClose={closeModal}
+        />
+      )}
     </div>
   );
 }

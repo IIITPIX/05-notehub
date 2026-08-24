@@ -38,6 +38,7 @@ export default function NoteForm({ closeModal }: NoteFormProps) {
     mutationFn: addNotes,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      closeModal();
     },
   });
   const handleSubmit = (
