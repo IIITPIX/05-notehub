@@ -1,17 +1,21 @@
-import { Field, Form, Formik, type FormikHelpers } from "formik";
+import { ErrorMessage, Field, Form, Formik, type FormikHelpers } from "formik";
 import css from "./NoteForm.module.css";
 import { useId } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addNotes } from "../../services/noteService";
+import type { Tag } from "../../types/note";
+import * as Yup from "yup";
 
 interface InitialValuesFields {
   title: string;
   content: string;
-  tag: string;
+  tag: Tag;
 }
 
 const initialValues: InitialValuesFields = {
   title: "",
   content: "",
-  tag: "",
+  tag: "Todo",
 };
 
 interface NoteFormProps {
@@ -20,44 +24,74 @@ interface NoteFormProps {
 export default function NoteForm({ closeModal }: NoteFormProps) {
   const fieldId = useId();
 
+  const queryClient = useQueryClient();
+
+  const Schema = Yup.object().shape({
+    title: Yup.string().required().min(3).max(50),
+    content: Yup.string().max(500),
+    tag: Yup.string()
+      .required()
+      .oneOf(["Work", "Personal", "Meeting", "Shopping", "Todo"]),
+  });
+
+  const mutation = useMutation({
+    mutationFn: addNotes,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
   const handleSubmit = (
     values: InitialValuesFields,
     actions: FormikHelpers<InitialValuesFields>,
   ) => {
-    console.log(values);
+    mutation.mutate(values);
     actions.resetForm();
   };
   return (
-    <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      validationSchema={Schema}
+    >
       <Form className={css.form}>
         <div className={css.formGroup}>
-          <label htmlFor="title">Title</label>
-          <Field id="title" type="text" name="title" className={css.input} />
-          {/* <span htmlFor={`${fieldId}-title`} className={css.error} /> */}
+          <label htmlFor={`${fieldId}-title`}>Title</label>
+          <Field
+            id={`${fieldId}-title`}
+            type="text"
+            name="title"
+            className={css.input}
+          />
+          <ErrorMessage component="span" className={css.error} name="title" />
         </div>
 
         <div className={css.formGroup}>
           <label htmlFor={`${fieldId}-content`}>Content</label>
           <Field
-            as="textArea"
-            id="content"
+            as="textarea"
+            id={`${fieldId}-content`}
             name="content"
             rows={8}
             className={css.textarea}
           />
-          {/* <span htmlFor={`${fieldId}-content`} className={css.error} /> */}
+          <ErrorMessage component="span" name="content" className={css.error} />
         </div>
 
         <div className={css.formGroup}>
           <label htmlFor={`${fieldId}-tag`}>Tag</label>
-          <Field as="select" id="tag" name="tag" className={css.select}>
+          <Field
+            as="select"
+            id={`${fieldId}-tag`}
+            name="tag"
+            className={css.select}
+          >
             <option value="Todo">Todo</option>
             <option value="Work">Work</option>
             <option value="Personal">Personal</option>
             <option value="Meeting">Meeting</option>
             <option value="Shopping">Shopping</option>
           </Field>
-          {/* <span htmlFor={`${fieldId}-tag`} className={css.error} /> */}
+          <ErrorMessage component="span" name="tag" className={css.error} />
         </div>
 
         <div className={css.actions}>

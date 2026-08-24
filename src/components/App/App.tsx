@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Pagination from "../Pagination/Pagination";
 import SearchBox from "../SearchBox/SearchBox";
 import css from "./App.module.css";
@@ -9,10 +9,13 @@ import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchText, setSearchText] = useState<string>("");
   const { data } = useQuery({
-    queryKey: ["notes", currentPage],
-    queryFn: () => fetchNotes({ search: "", page: currentPage, perPage: 10 }),
+    queryKey: ["notes", currentPage, searchText],
+    queryFn: () =>
+      fetchNotes({ search: searchText, page: currentPage, perPage: 10 }),
+    placeholderData: keepPreviousData,
   });
 
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
@@ -23,10 +26,11 @@ function App() {
   const closeModal = () => {
     setIsOpenModal(false);
   };
+
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox />
+        <SearchBox onChange={setSearchText} />
         {data && (
           <Pagination
             currentPage={currentPage}
