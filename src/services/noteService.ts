@@ -36,7 +36,7 @@ interface FetchDeleteNote {
 }
 
 export async function fetchDeleteNote({ id }: FetchDeleteNote): Promise<Note> {
-  const { data } = await axios.delete<Note>(`/notes${id}`);
+  const { data } = await axios.delete<Note>(`/notes/${id}`);
   return data;
 }
 
